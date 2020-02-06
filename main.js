@@ -50,10 +50,8 @@ Vue.component('product', {
 					<button v-on:click="addToCart"
 							:disabled="!inStock"
 						    :class="{disabledButton: !inStock}">Add to Cart</button>
-					<button v-on:click="emptyCart" v-show="cart">Empty Cart</button>
-					<div class="cart">
-						<p>Cart({{cart}})</p>
-					</div>
+				    <button @click="removeFromCart">Remove</button>
+					<!-- <button v-on:click="emptyCart" v-show="cart">Empty Cart</button> -->
 					<p><a :href="link" target="_blank">More products like this</a></p>
 				</div>
 
@@ -82,17 +80,19 @@ Vue.component('product', {
                 variantQuantity: 0
               }
             ],
-            sizes: ['S', 'M', 'L'],
-            cart: 0
+            sizes: ['S', 'M', 'L']
         }
     },
     methods: {
         addToCart: function(){
-            this.cart += 1
+            this.$emit('add-to-cart', this.variants[this.selectedVariant].variantId)
         },
-       emptyCart: function(){
-            this.cart = 0
+        removeFromCart: function(){
+            this.$emit('remove-from-cart', this.variants[this.selectedVariant].variantId)
         },
+//       emptyCart: function(){
+//            this.cart = 0
+//        },
         updateProduct(index){
             this.selectedVariant = index
         }
@@ -123,6 +123,15 @@ Vue.component('product', {
 var app = new Vue({
     el: '#app',
     data: {
-        premium: true
+        premium: true,
+        cart: []
+    },
+    methods: {
+        updateCart(id){
+            this.cart.push(id)
+        },
+        removeFromCart(id){
+            this.cart.pop(id)
+        }
     }
 })
