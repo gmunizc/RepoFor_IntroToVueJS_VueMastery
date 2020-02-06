@@ -29,8 +29,8 @@ var app = new Vue({
         addToCart: function(){
             this.cart += 1
         },
-       subToCart: function(){
-            this.cart -= 1
+       emptyCart: function(){
+            this.cart = 0
         },
         updateProduct(index){
             this.selectedVariant = index
