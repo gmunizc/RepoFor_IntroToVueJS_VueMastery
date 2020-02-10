@@ -1,3 +1,48 @@
+var eventBus = new Vue()
+
+Vue.component('product-tab', {
+    props: {
+        reviews: {
+            type: Array,
+            required: true
+        }
+    },
+    template: `
+        <div>
+            <span class="tab"
+                  :class="{ activeTab: selectedTab === tab }"
+                  v-for="(tab, index) in tabs"
+                  :key="index"
+                  @click="selectedTab = tab"
+                  > {{tab}} </span>
+
+            <div v-show="selectedTab === 'Reviews'">
+                <h2>Reviews</h2>
+                <p v-if="!reviews.length">There are no reviews yet.</p>
+                <ul>
+                    <li v-for="review in reviews">
+                        <ul>
+                            <li>{{review.name}}</li>
+                            <li>Rating: {{review.rating}}</li>
+                            <li>{{review.review}}</li>
+                            <li>Recommend? {{review.recommend}}</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+            <product-review v-show="selectedTab === 'Make a Review'"></product-review>
+
+        </div>
+    `,
+    data(){
+        return {
+            tabs: ["Reviews", "Make a Review"],
+            selectedTab: "Reviews"
+        }
+    }
+})
+
 Vue.component('product-review',{
     template: `
         <form class="review-form" @submit.prevent="onSubmit">
@@ -58,7 +103,7 @@ Vue.component('product-review',{
                     rating: this.rating,
                     recommend: this.recommend
                 }
-                this.$emit('review-submitted', productReview)
+                eventBus.$emit('review-submitted', productReview)
                 this.name = null,
                 this.review = null,
                 this.rating = null,
@@ -97,58 +142,43 @@ Vue.component('product', {
     },
     template: `
         <div class="product">
-				<div class="product-image">
-					<img v-bind:src="image">
+            <div class="product-image">
+                <img v-bind:src="image">
 
-				</div>
+            </div>
 
-				<div class="product-info">
-					<h1>{{title}}</h1>
-					<p>{{description}}</p>
-					<p>Shipping: {{shipping}}</p>
-					<span v-if="onSale">On Sale!</span>
-					<product-details :details="details"></product-details>
-					<p v-if="inStock"> In Stock </p>
-					<p v-else :class="{outOfStock: !inStock}"> Out of Stock </p>
-					<p>Available in sizes:</p>
-					<ul>
-						<li v-for="size in sizes">{{size}}</li>
+            <div class="product-info">
+                <h1>{{title}}</h1>
+                <p>{{description}}</p>
+                <p>Shipping: {{shipping}}</p>
+                <span v-if="onSale">On Sale!</span>
+                <product-details :details="details"></product-details>
+                <p v-if="inStock"> In Stock </p>
+                <p v-else :class="{outOfStock: !inStock}"> Out of Stock </p>
+                <p>Available in sizes:</p>
+                <ul>
+                    <li v-for="size in sizes">{{size}}</li>
 
-					</ul>
-					<div v-for="(variant, index) in variants"
-						 :key="variant.variantId"
-						 class="color-box"
-						 :style="{backgroundColor: variant.variantColor}"
-					     @mouseover="updateProduct(index)">
-					</div>
-
-
-					<button v-on:click="addToCart"
-							:disabled="!inStock"
-						    :class="{disabledButton: !inStock}">Add to Cart</button>
-				    <button @click="removeFromCart">Remove</button>
-					<!-- <button v-on:click="emptyCart" v-show="cart">Empty Cart</button> -->
-					<p><a :href="link" target="_blank">More products like this</a></p>
-				</div>
-
-                <div>
-                    <h2>Reviews</h2>
-                    <p v-if="!reviews.length">There are no reviews yet.</p>
-                    <ul>
-                        <li v-for="review in reviews">
-                            <ul>
-                                <li>{{review.name}}</li>
-                                <li>Rating: {{review.rating}}</li>
-                                <li>{{review.review}}</li>
-                                <li>Recommend? {{review.recommend}}</li>
-                            </ul>
-                        </li>
-                    </ul>
+                </ul>
+                <div v-for="(variant, index) in variants"
+                     :key="variant.variantId"
+                     class="color-box"
+                     :style="{backgroundColor: variant.variantColor}"
+                     @mouseover="updateProduct(index)">
                 </div>
 
-				<product-review @review-submitted="addReview"></product-review>
 
-			</div>
+                <button v-on:click="addToCart"
+                        :disabled="!inStock"
+                        :class="{disabledButton: !inStock}">Add to Cart</button>
+                <button @click="removeFromCart">Remove</button>
+                <!-- <button v-on:click="emptyCart" v-show="cart">Empty Cart</button> -->
+                <p><a :href="link" target="_blank">More products like this</a></p>
+            </div>
+
+            <product-tab :reviews="reviews"></product-tab>
+
+		</div>
     `,
     data(){
         return {
@@ -189,9 +219,6 @@ Vue.component('product', {
 //        },
         updateProduct(index){
             this.selectedVariant = index
-        },
-        addReview(productReview){
-            this.reviews.push(productReview)
         }
     },
     computed: {
@@ -213,6 +240,11 @@ Vue.component('product', {
             }
 
         }
+    },
+    mounted(){
+        eventBus.$on('review-submitted', productReview => {
+            this.reviews.push(productReview)
+        })
     }
 
 })
